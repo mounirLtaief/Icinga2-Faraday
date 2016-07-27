@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+##!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 #  traceroute.py
@@ -29,15 +29,15 @@ import sys
 import os
 
 
-def tracrout(dest_addr):
-    dest_name = socket.gethostbyname(dest_addr)
+def TraceRoute(dest_addr):
+    #dest_name = socket.gethostbyname(dest_addr)
     port = 33434
     max_hops = 30
     icmp = socket.getprotobyname('icmp')
     udp = socket.getprotobyname('udp')
     ttl = 1
     hopslist = []
-
+    iphops = []
     while True:
         recv_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
         send_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, udp)
@@ -51,7 +51,7 @@ def tracrout(dest_addr):
         
         recv_socket.bind(("", port))
         #sys.stdout.write(" %d  " % ttl)
-        send_socket.sendto("", (dest_name, port))
+        send_socket.sendto("", (dest_addr, port))
         curr_addr = None
         curr_name = None
         finished = False
@@ -61,8 +61,6 @@ def tracrout(dest_addr):
                 _, curr_addr = recv_socket.recvfrom(512)
                 finished = True
                 curr_addr = curr_addr[0]
-        
-                
                 try:
                     curr_name = socket.gethostbyaddr(curr_addr)[0]
                 except socket.error:
@@ -71,6 +69,8 @@ def tracrout(dest_addr):
                 tries = tries - 1
                 #sys.stdout.write("* ")
         
+        if tries <=0 and curr_addr is None:
+			break
         send_socket.close()
         recv_socket.close()
         
@@ -78,15 +78,31 @@ def tracrout(dest_addr):
             pass
         
         if curr_addr is not None:
-            curr_host = "%s (%s)" % (curr_name, curr_addr)
-            hopslist.append(curr_addr)
+			if curr_addr in iphops:
+				break
+			curr_host = { 
+			'hostname' : curr_name,
+			'address' : curr_addr,
+			'mac' : "",
+			'hop_nbr' :	ttl
+			} 
+			hopslist.append(curr_host)
+			iphops.append(curr_addr)
         else:
             curr_host = ""
-        #sys.stdout.write("%s\n" % (curr_host))
 
         ttl += 1
         
         if curr_addr == dest_addr or ttl > max_hops:
             break
-    return hopslist	
-
+    return hopslist,iphops 	
+    
+#def main(args):
+	##list1 = TraceRoute('192.168.178.68')
+	#print TraceRoute('192.168.178.1')
+	##print list1 
+	
+	#return 0
+#if __name__ == '__main__':
+    #import sys
+    #sys.exit(main(sys.argv))
