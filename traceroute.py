@@ -27,7 +27,9 @@ import socket
 import struct
 import sys
 import os
-
+if os.name != "nt":
+    import fcntl
+    import struct
 
 def TraceRoute(dest_addr):
     #dest_name = socket.gethostbyname(dest_addr)
@@ -59,6 +61,9 @@ def TraceRoute(dest_addr):
         while not finished and tries > 0:
             try:
                 _, curr_addr = recv_socket.recvfrom(512)
+                data = recv_socket.recv(4)
+                myint = struct.unpack('!i', data)[0]
+                print socket.inet_ntoa(struct.pack('!L', myint))
                 finished = True
                 curr_addr = curr_addr[0]
                 try:
@@ -97,12 +102,12 @@ def TraceRoute(dest_addr):
             break
     return hopslist,iphops 	
     
-#def main(args):
-	##list1 = TraceRoute('192.168.178.68')
-	#print TraceRoute('192.168.178.1')
-	##print list1 
+def main(args):
+	#list1 = TraceRoute('192.168.178.68')
+	print TraceRoute('192.168.178.1')
+	#print list1 
 	
-	#return 0
-#if __name__ == '__main__':
-    #import sys
-    #sys.exit(main(sys.argv))
+	return 0
+if __name__ == '__main__':
+    import sys
+    sys.exit(main(sys.argv))
